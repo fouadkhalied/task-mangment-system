@@ -1,0 +1,28 @@
+# Maven
+/target/
+/pom.xml.tag
+/pom.xml.releaseBackup
+/pom.xml.versionsBackup
+/release.properties
+/.mvn/timing.properties
+/.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+/.gradle
+/build/
+/!gradle/wrapper/gradle-wrapper.jar
+
+# IDEs
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+*.class
+
+# Logs
+*.log
+
+# OS specific
+.DS_Store
+Thumbs.db

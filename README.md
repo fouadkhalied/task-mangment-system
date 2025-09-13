@@ -1,0 +1,340 @@
+﻿# Task Management System
+
+A modern task management microservice built with Spring Boot, MongoDB, and Redis, following Domain-Driven Design (DDD) principles. Designed for deployment on Azure Container Apps with Docker containerization.
+
+## 🏗️ Architecture
+
+### Tech Stack
+- **Backend**: Spring Boot 3.5.5 with Java 21
+- **Database**: MongoDB (Document Model)
+- **Cache**: Redis
+- **Containerization**: Docker & Docker Compose
+- **Deployment**: Azure Container Apps
+- **Build Tool**: Maven
+
+### Design Principles
+- **Document Model**: Chosen over relational model for schema flexibility and better performance
+- **Domain-Driven Design**: Clean architecture with separated layers
+- **Microservices Ready**: Stateless, containerized, and cloud-native
+
+## 📋 Features
+
+- ✅ Create, update, and manage tasks
+- ✅ Board-based task organization
+- ✅ Task assignment and status tracking
+- ✅ Priority management
+- ✅ Overdue task detection
+- ✅ Redis caching for performance
+- ✅ Health checks and monitoring
+- ✅ Docker containerization
+- ✅ Cloud deployment ready
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Java 21
+- Maven 3.6+
+- Docker & Docker Compose
+- Git
+
+### Local Development Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd app
+   ```
+
+2. **Start infrastructure with Docker**
+   ```bash
+   docker-compose up -d mongodb redis
+   ```
+
+3. **Run the application locally**
+   ```bash
+   mvn spring-boot:run
+   ```
+
+4. **Access the application**
+   - API: http://localhost:8080
+   - Health Check: http://localhost:8080/actuator/health
+   - MongoDB UI: http://localhost:8081 (admin/admin123)
+
+### Full Docker Deployment
+
+1. **Build and start everything**
+   ```bash
+   docker-compose up --build
+   ```
+
+2. **Run in background**
+   ```bash
+   docker-compose up -d --build
+   ```
+
+3. **View logs**
+   ```bash
+   docker-compose logs -f app
+   ```
+
+4. **Stop services**
+   ```bash
+   docker-compose down
+   ```
+
+## 📁 Project Structure
+
+```
+app/
+├── src/
+│   ├── main/
+│   │   ├── java/com/company/app/
+│   │   │   ├── application/
+│   │   │   │   ├── dto/           # Data Transfer Objects
+│   │   │   │   └── service/       # Application Services
+│   │   │   ├── domain/
+│   │   │   │   ├── entity/        # Domain Entities
+│   │   │   │   ├── repository/    # Repository Interfaces
+│   │   │   │   └── valueobject/   # Value Objects
+│   │   │   ├── infrastructure/    # External concerns
+│   │   │   └── presentation/      # Controllers
+│   │   └── resources/
+│   │       ├── application.yml           # Local config
+│   │       └── application-docker.yml    # Docker config
+│   └── test/                      # Test classes
+├── docker-compose.yml             # Multi-service setup
+├── Dockerfile                     # Application container
+└── pom.xml                       # Maven dependencies
+```
+
+## 🗄️ Data Model
+
+### Task Entity (MongoDB Document)
+```json
+{
+  "_id": "string",
+  "title": "string",
+  "description": "string", 
+  "status": "TODO|IN_PROGRESS|DONE|COMPLETED",
+  "priority": "LOW|MEDIUM|HIGH|URGENT",
+  "board_id": "string",
+  "assigned_to": "string",
+  "due_date": "2024-01-01T00:00:00",
+  "created_at": "2024-01-01T00:00:00",
+  "updated_at": "2024-01-01T00:00:00"
+}
+```
+
+### Why Document Model?
+- **Schema Flexibility**: Tasks can have varying attributes without migrations
+- **Performance**: Single document queries, no complex joins
+- **Natural Mapping**: JSON documents map directly to application objects
+- **Scalability**: Better horizontal scaling compared to relational models
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description | Local | Docker |
+|----------|-------------|-------|--------|
+| `SPRING_PROFILES_ACTIVE` | Active profile | `default` | `docker` |
+| `SPRING_DATA_MONGODB_URI` | MongoDB connection | `mongodb://localhost:27017/taskdb` | `mongodb://mongodb:27017/taskdb` |
+| `SPRING_REDIS_HOST` | Redis host | `localhost` | `redis` |
+| `SPRING_REDIS_PORT` | Redis port | `6379` | `6379` |
+| `SERVER_PORT` | Application port | `8080` | `8080` |
+
+### Profiles
+
+- **default**: Local development with localhost connections
+- **docker**: Container environment with service names
+- **test**: Embedded databases for testing
+
+## 📊 API Endpoints
+
+### Task Management
+- `POST /api/tasks` - Create task
+- `GET /api/tasks/{id}` - Get task by ID
+- `PUT /api/tasks/{id}` - Update task
+- `DELETE /api/tasks/{id}` - Delete task
+- `PUT /api/tasks/{id}/status` - Update task status
+
+### Queries
+- `GET /api/tasks/board/{boardId}` - Get tasks by board
+- `GET /api/tasks/assignee/{userId}` - Get tasks by assignee
+- `GET /api/tasks/status/{status}` - Get tasks by status
+- `GET /api/tasks/overdue` - Get overdue tasks
+
+### Health & Monitoring
+- `GET /actuator/health` - Application health
+- `GET /actuator/info` - Application info
+- `GET /actuator/metrics` - Application metrics
+
+## 🐳 Docker Services
+
+### Application Stack
+```yaml
+services:
+  app:           # Spring Boot application (port 8080)
+  mongodb:       # MongoDB database (port 27017)
+  redis:         # Redis cache (port 6379)
+  mongo-express: # MongoDB web UI (port 8081)
+```
+
+### Container Features
+- **Multi-stage builds** for optimized image size
+- **Non-root user** for security
+- **Health checks** for container orchestration
+- **Persistent volumes** for data
+- **Custom networks** for service isolation
+
+## ☁️ Azure Container Apps Deployment
+
+### Free Tier Benefits
+- **180,000 vCPU-seconds** monthly
+- **360,000 GiB-seconds** monthly
+- **2 million requests** monthly
+- **Auto-scaling to zero** (cost optimization)
+
+### Deployment Steps
+1. **Create Container App Environment**
+2. **Deploy from GitHub** (automatic builds)
+3. **Configure environment variables**
+4. **Set up custom domains** (optional)
+
+### Container Apps Features
+- ✅ Serverless scaling
+- ✅ Automatic HTTPS
+- ✅ Built-in load balancing
+- ✅ Blue-green deployments
+- ✅ Integrated monitoring
+
+## 🧪 Testing
+
+### Run Tests
+```bash
+# Unit tests
+mvn test
+
+# Integration tests with embedded MongoDB
+mvn verify
+
+# Test with specific profile
+mvn test -Dspring.profiles.active=test
+```
+
+### Test Configuration
+- **Embedded MongoDB** for integration tests
+- **TestContainers** for full stack testing
+- **Separate test profiles** for isolation
+
+## 🚀 Development Workflow
+
+### Local Development
+1. Start infrastructure: `docker-compose up -d mongodb redis`
+2. Run app: `mvn spring-boot:run`
+3. Make changes and test
+4. Commit and push to trigger CI/CD
+
+### Docker Development
+1. Build and start: `docker-compose up --build`
+2. Make changes
+3. Rebuild: `docker-compose build app`
+4. Restart: `docker-compose restart app`
+
+## 📈 Performance Optimizations
+
+### MongoDB Indexes
+```javascript
+// Essential indexes for performance
+db.tasks.createIndex({ "board_id": 1, "status": 1 })
+db.tasks.createIndex({ "assigned_to": 1, "created_at": -1 })
+db.tasks.createIndex({ "due_date": 1, "status": 1 })
+```
+
+### Redis Caching
+- **Task queries** cached for fast retrieval
+- **Session management** for user state
+- **Rate limiting** for API protection
+
+### Application Optimizations
+- **Lazy loading** for large collections
+- **Pagination** for list endpoints
+- **Compression** for API responses
+- **Connection pooling** for databases
+
+## 🔒 Security Considerations
+
+- **Non-root containers** for reduced attack surface
+- **Environment-based secrets** (not hardcoded)
+- **Input validation** with Spring Validation
+- **HTTPS enforcement** in production
+- **Health check endpoints** for monitoring
+
+## 📚 Key Design Decisions
+
+### Why MongoDB over SQL?
+- **Document model** fits task management domain
+- **Schema flexibility** for evolving requirements
+- **Better performance** for read-heavy workloads
+- **Natural JSON mapping** for REST APIs
+
+### Why Docker?
+- **Environment consistency** across dev/prod
+- **Easy dependency management** 
+- **Cloud deployment ready**
+- **Scalable architecture**
+
+### Why Azure Container Apps?
+- **True serverless** containers
+- **Free tier** for development
+- **Auto-scaling** to zero
+- **Integrated with Azure ecosystem**
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**MongoDB Connection Failed**
+```bash
+# Check if MongoDB is running
+docker ps | grep mongo
+
+# Start MongoDB
+docker-compose up -d mongodb
+```
+
+**Redis Connection Failed**
+```bash
+# Check Redis status
+docker logs <redis-container-id>
+
+# Restart Redis
+docker-compose restart redis
+```
+
+**Application Won't Start**
+```bash
+# Check logs
+docker-compose logs app
+
+# Rebuild application
+docker-compose build --no-cache app
+```
+
+**Java Version Issues**
+```bash
+# Verify Java version
+java --version
+
+# Should be Java 21
+```
+
+## 📖 Further Reading
+
+- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
+- [MongoDB Documentation](https://docs.mongodb.com/)
+- [Azure Container Apps Documentation](https://docs.microsoft.com/en-us/azure/container-apps/)
+- [Docker Documentation](https://docs.docker.com/)
+- [DDIA Book](https://dataintensive.net/) - Database design principles
+
+**Built with ❤️ using modern cloud-native technologies**

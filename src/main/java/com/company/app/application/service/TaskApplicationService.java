@@ -3,7 +3,6 @@ package com.company.app.application.service;
 import com.company.app.domain.entity.Task;
 import com.company.app.domain.repository.TaskRepository;
 import com.company.app.domain.valueobject.TaskStatus;
-import com.company.app.domain.valueobject.Priority;
 import com.company.app.application.dto.TaskCreateRequest;
 import com.company.app.application.dto.TaskResponse;
 import lombok.RequiredArgsConstructor;

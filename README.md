@@ -121,18 +121,6 @@ app/
 
 ## 🔧 Configuration
 
-### Environment Variables
-
-| Variable | Description | Local | Docker |
-|----------|-------------|-------|--------|
-| `SPRING_PROFILES_ACTIVE` | Active profile | `default` | `docker` |
-| `SPRING_DATASOURCE_URL` | PostgreSQL connection | `jdbc:postgresql://host:5432/db?sslmode=require` | `jdbc:postgresql://host:5432/db?sslmode=require` |
-| `SPRING_DATASOURCE_USERNAME` | DB user | `user` | `user` |
-| `SPRING_DATASOURCE_PASSWORD` | DB password | `pass` | `pass` |
-| `SPRING_REDIS_HOST` | Redis host | `localhost` | `redis` |
-| `SPRING_REDIS_PORT` | Redis port | `6379` | `6379` |
-| `SERVER_PORT` | Application port | `8080` | `8080` |
-
 ### Profiles
 
 - **default**: Local development with localhost connections

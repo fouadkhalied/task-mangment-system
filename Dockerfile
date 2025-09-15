@@ -23,6 +23,9 @@ RUN ./mvnw clean package -DskipTests
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
 
+# Install wget for health check
+RUN apk add --no-cache wget
+
 # Add application user
 RUN addgroup -g 1001 -S appuser && \
     adduser -u 1001 -S appuser -G appuser
@@ -39,12 +42,18 @@ RUN chown appuser:appuser app.jar
 # Switch to non-root user
 USER appuser
 
-# Expose port
+# Expose port 8080 (standard Spring Boot port)
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+# Health check with proper startup time and port
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-# Run application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run application with containerized JVM optimizations
+ENTRYPOINT ["java", \
+    "-XX:+UseContainerSupport", \
+    "-XX:MaxRAMPercentage=75.0", \
+    "-Dserver.port=8080", \
+    "-Dmanagement.endpoints.web.exposure.include=health,info", \
+    "-Dmanagement.endpoint.health.show-details=always", \
+    "-jar", "app.jar"]

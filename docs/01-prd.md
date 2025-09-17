@@ -89,10 +89,3 @@ Availability: 99.5% uptime (accepts downtime for deployments).
 Data Persistence: No data loss under normal operation.
 
 Security: All user passwords must be hashed. All endpoints authenticated.
-
-Approvals:
-
-Product: ____________________
-
-Engineering: ____________________ (This is you!)
-

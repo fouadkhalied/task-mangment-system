@@ -1,0 +1,172 @@
+<svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a90e2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#357abd;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5cb85c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#449d44;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e74c3c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c0392b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f39c12;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e67e22;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9b59b6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8e44ad;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="3" stdDeviation="4" flood-color="rgba(0,0,0,0.2)"/>
+    </filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="900" fill="url(#backgroundGrad)"/>
+  <defs>
+    <linearGradient id="backgroundGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8f9fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e9ecef;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Title -->
+  <text x="700" y="40" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="bold" fill="#2c3e50">Task Management System Architecture</text>
+
+  <!-- Container App Environment Box -->
+  <rect x="50" y="80" width="1300" height="750" rx="20" fill="rgba(52, 152, 219, 0.05)" stroke="#3498db" stroke-width="3" stroke-dasharray="10,5" filter="url(#shadow)"/>
+  <text x="70" y="110" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="bold" fill="#3498db">Azure Container Apps Environment</text>
+
+  <!-- Frontend -->
+  <rect x="550" y="140" width="300" height="100" rx="15" fill="url(#greenGrad)" filter="url(#shadow)"/>
+  <text x="700" y="175" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="bold" fill="white">Frontend</text>
+  <text x="700" y="195" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="white">React/Next.js</text>
+  <text x="700" y="215" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="white">Azure Static Web Apps</text>
+
+  <!-- App Service -->
+  <rect x="100" y="320" width="280" height="120" rx="15" fill="url(#blueGrad)" filter="url(#shadow)"/>
+  <text x="240" y="355" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="bold" fill="white">App Service</text>
+  <text x="240" y="375" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="white">Spring Boot</text>
+  <text x="240" y="395" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Main API & Business Logic</text>
+  <text x="240" y="415" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Single Entry Point</text>
+
+  <!-- Notification Worker -->
+  <rect x="450" y="320" width="280" height="120" rx="15" fill="url(#redGrad)" filter="url(#shadow)"/>
+  <text x="590" y="355" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="bold" fill="white">Notification Worker</text>
+  <text x="590" y="375" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="white">Spring Boot</text>
+  <text x="590" y="395" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Event Consumer</text>
+  <text x="590" y="415" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">No External API</text>
+
+  <!-- Analytics Worker -->
+  <rect x="800" y="320" width="280" height="120" rx="15" fill="url(#orangeGrad)" filter="url(#shadow)"/>
+  <text x="940" y="355" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="bold" fill="white">Analytics Worker</text>
+  <text x="940" y="375" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="white">Python/FastAPI</text>
+  <text x="940" y="395" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Data Processing</text>
+  <text x="940" y="415" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">No External API</text>
+
+  <!-- Kafka -->
+  <rect x="1150" y="340" width="200" height="80" rx="15" fill="url(#purpleGrad)" filter="url(#shadow)"/>
+  <text x="1250" y="370" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="bold" fill="white">Kafka Topics</text>
+  <text x="1250" y="390" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="white">Confluent Cloud</text>
+  <text x="1250" y="405" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Event Streaming</text>
+
+  <!-- PostgreSQL Core -->
+  <rect x="100" y="520" width="180" height="120" rx="15" fill="#336791" filter="url(#shadow)"/>
+  <text x="190" y="555" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="bold" fill="white">PostgreSQL</text>
+  <text x="190" y="575" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Core Business Data</text>
+  <text x="190" y="595" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Users, Tasks, Projects</text>
+  <text x="190" y="615" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">ACID Transactions</text>
+
+  <!-- PostgreSQL Notifications -->
+  <rect x="320" y="520" width="180" height="120" rx="15" fill="#2c5aa0" filter="url(#shadow)"/>
+  <text x="410" y="555" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="bold" fill="white">PostgreSQL</text>
+  <text x="410" y="575" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Notifications Schema</text>
+  <text x="410" y="595" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">High R/W Volume</text>
+  <text x="410" y="615" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">User Alerts</text>
+
+  <!-- ClickHouse -->
+  <rect x="540" y="520" width="180" height="120" rx="15" fill="#ff6b35" filter="url(#shadow)"/>
+  <text x="630" y="555" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="bold" fill="white">ClickHouse</text>
+  <text x="630" y="575" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Analytics Data</text>
+  <text x="630" y="595" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Event History</text>
+  <text x="630" y="615" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Column Store</text>
+
+  <!-- Redis -->
+  <rect x="760" y="520" width="180" height="120" rx="15" fill="#dc382d" filter="url(#shadow)"/>
+  <text x="850" y="555" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="bold" fill="white">Redis</text>
+  <text x="850" y="575" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Cache & Sessions</text>
+  <text x="850" y="595" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">In-Memory Store</text>
+  <text x="850" y="615" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">WebSocket Sessions</text>
+
+  <!-- External Services -->
+  <rect x="1000" y="520" width="180" height="120" rx="15" fill="#6c757d" filter="url(#shadow)"/>
+  <text x="1090" y="555" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="bold" fill="white">External APIs</text>
+  <text x="1090" y="575" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">SendGrid Email</text>
+  <text x="1090" y="595" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">Azure Blob Storage</text>
+  <text x="1090" y="615" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="white">OAuth Providers</text>
+
+  <!-- Arrows -->
+  <defs>
+    <marker id="arrowblue" markerWidth="12" markerHeight="8" refX="11" refY="4" orient="auto">
+      <polygon points="0 0, 12 4, 0 8" fill="#2c3e50"/>
+    </marker>
+    <marker id="arrowkafka" markerWidth="12" markerHeight="8" refX="11" refY="4" orient="auto">
+      <polygon points="0 0, 12 4, 0 8" fill="#9b59b6"/>
+    </marker>
+  </defs>
+
+  <!-- Frontend to App Service -->
+  <path d="M 650 240 Q 500 280 380 320" stroke="#2c3e50" stroke-width="4" fill="none" marker-end="url(#arrowblue)"/>
+  <text x="520" y="275" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#2c3e50">REST API + WebSocket</text>
+
+  <!-- App Service to Databases -->
+  <line x1="240" y1="440" x2="190" y2="520" stroke="#2c3e50" stroke-width="3" marker-end="url(#arrowblue)"/>
+  <line x1="240" y1="440" x2="850" y2="520" stroke="#2c3e50" stroke-width="3" marker-end="url(#arrowblue)"/>
+
+  <!-- App Service to Kafka -->
+  <path d="M 380 380 Q 800 350 1150 380" stroke="#9b59b6" stroke-width="4" fill="none" marker-end="url(#arrowkafka)"/>
+  <text x="700" y="340" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#9b59b6">Publish Events</text>
+
+  <!-- Kafka to Workers -->
+  <path d="M 1150 370 Q 900 360 730 360" stroke="#9b59b6" stroke-width="4" fill="none" marker-end="url(#arrowkafka)"/>
+  <path d="M 1150 390 Q 1050 400 940 420" stroke="#9b59b6" stroke-width="4" fill="none" marker-end="url(#arrowkafka)"/>
+
+  <!-- Workers to Databases -->
+  <line x1="590" y1="440" x2="410" y2="520" stroke="#2c3e50" stroke-width="3" marker-end="url(#arrowblue)"/>
+  <line x1="940" y1="440" x2="630" y2="520" stroke="#2c3e50" stroke-width="3" marker-end="url(#arrowblue)"/>
+
+  <!-- Notification Worker to External -->
+  <line x1="730" y1="380" x2="1000" y2="580" stroke="#2c3e50" stroke-width="3" marker-end="url(#arrowblue)"/>
+
+  <!-- Legend -->
+  <rect x="100" y="720" width="500" height="100" rx="10" fill="rgba(255,255,255,0.9)" stroke="#dee2e6" stroke-width="1" filter="url(#shadow)"/>
+  <text x="120" y="745" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50">Legend</text>
+  
+  <line x1="120" y1="760" x2="160" y2="760" stroke="#2c3e50" stroke-width="3" marker-end="url(#arrowblue)"/>
+  <text x="170" y="765" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#2c3e50">REST API Calls & Database Connections</text>
+  
+  <line x1="120" y1="780" x2="160" y2="780" stroke="#9b59b6" stroke-width="3" marker-end="url(#arrowkafka)"/>
+  <text x="170" y="785" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#2c3e50">Kafka Event Streams (Async)</text>
+  
+  <text x="120" y="805" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#2c3e50">All services deployed as containers in Azure Container Apps</text>
+
+  <!-- Key Features -->
+  <rect x="700" y="720" width="600" height="100" rx="10" fill="rgba(255,255,255,0.9)" stroke="#dee2e6" stroke-width="1" filter="url(#shadow)"/>
+  <text x="720" y="745" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50">Key Architecture Features</text>
+  <text x="720" y="765" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#2c3e50">• Single Entry Point: Only App Service exposes external APIs</text>
+  <text x="720" y="780" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#2c3e50">• Event-Driven: Loose coupling via Kafka message streams</text>
+  <text x="720" y="795" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#2c3e50">• Database per Service: Optimized storage for each workload</text>
+  <text x="720" y="810" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#2c3e50">• Cost-Effective: Container Apps scale to zero when not in use</text>
+
+</svg>

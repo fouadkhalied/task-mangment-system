@@ -4,6 +4,8 @@ A modern task management microservice built with Spring Boot, PostgreSQL, and Re
 
 ## 🏗️ Architecture
 
+![Task Management System Architecture](./assets/architecture-diagram.svg)
+
 ### Tech Stack
 - **Backend**: Spring Boot 3.5.5 with Java 21
 - **Database**: PostgreSQL (UUID primary keys)

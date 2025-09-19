@@ -1,4 +1,4 @@
-package com.company.app.application.service;
+package com.company.app.modules.taskCore.application.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -8,12 +8,12 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.company.app.application.dto.TaskCreateRequest;
-import com.company.app.application.dto.TaskResponse;
-import com.company.app.domain.entity.Task;
-import com.company.app.domain.repository.TaskRepository;
-import com.company.app.domain.valueobject.Priority;
-import com.company.app.domain.valueobject.TaskStatus;
+import com.company.app.modules.taskCore.application.dto.TaskCreateRequest;
+import com.company.app.modules.taskCore.application.dto.TaskResponse;
+import com.company.app.modules.taskCore.domain.entity.Task;
+import com.company.app.modules.taskCore.domain.repository.TaskRepository;
+import com.company.app.modules.taskCore.domain.valueobject.Priority;
+import com.company.app.modules.taskCore.domain.valueobject.TaskStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.company.app.domain.repository;
+package com.company.app.modules.taskCore.domain.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,9 +11,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.company.app.domain.entity.Task;
-import com.company.app.domain.valueobject.Priority;
-import com.company.app.domain.valueobject.TaskStatus;
+import com.company.app.modules.taskCore.domain.entity.Task;
+import com.company.app.modules.taskCore.domain.valueobject.Priority;
+import com.company.app.modules.taskCore.domain.valueobject.TaskStatus;
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task, UUID> {
@@ -28,7 +28,7 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     List<Task> findByStatus(TaskStatus status);
 
     // Find overdue tasks (JPA query syntax)
-    @Query("SELECT t FROM Task t WHERE t.dueDate < :now AND t.status != com.company.app.domain.valueobject.TaskStatus.DONE")
+    @Query("SELECT t FROM Task t WHERE t.dueDate < :now AND t.status != com.company.app.modules.taskCore.domain.valueobject.TaskStatus.DONE")
     List<Task> findOverdueTasks(@Param("now") LocalDateTime now);
 
     // Find tasks by board and status

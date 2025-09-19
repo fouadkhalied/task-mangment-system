@@ -1,7 +1,7 @@
-package com.company.app.application.dto;
+package com.company.app.modules.taskCore.application.dto;
 
-import com.company.app.domain.valueobject.TaskStatus;
-import com.company.app.domain.valueobject.Priority;
+import com.company.app.modules.taskCore.domain.valueobject.TaskStatus;
+import com.company.app.modules.taskCore.domain.valueobject.Priority;
 import lombok.Builder;
 import lombok.Data;
 import java.time.LocalDateTime;

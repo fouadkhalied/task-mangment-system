@@ -1,4 +1,4 @@
-package com.company.app.application.service;
+package com.company.app.modules.taskCore.application.service;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

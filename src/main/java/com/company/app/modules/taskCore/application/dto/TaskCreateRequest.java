@@ -1,6 +1,6 @@
-package com.company.app.application.dto;
+package com.company.app.modules.taskCore.application.dto;
 
-import com.company.app.domain.valueobject.Priority;
+import com.company.app.modules.taskCore.domain.valueobject.Priority;
 import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

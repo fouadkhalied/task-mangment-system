@@ -1,4 +1,4 @@
-package com.company.app.presentation.controller;
+package com.company.app.modules.taskCore.presentation.controller;
 
 import java.util.List;
 
@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.company.app.application.dto.TaskCreateRequest;
-import com.company.app.application.dto.TaskResponse;
-import com.company.app.application.service.TaskApplicationService;
-import com.company.app.domain.valueobject.TaskStatus;
+import com.company.app.modules.taskCore.application.dto.TaskCreateRequest;
+import com.company.app.modules.taskCore.application.dto.TaskResponse;
+import com.company.app.modules.taskCore.application.service.TaskApplicationService;
+import com.company.app.modules.taskCore.domain.valueobject.TaskStatus;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

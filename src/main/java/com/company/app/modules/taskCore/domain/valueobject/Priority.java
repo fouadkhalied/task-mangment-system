@@ -1,4 +1,4 @@
-package com.company.app.domain.valueobject;
+package com.company.app.modules.taskCore.domain.valueobject;
 
 public enum Priority {
     LOW(1, "Low"),

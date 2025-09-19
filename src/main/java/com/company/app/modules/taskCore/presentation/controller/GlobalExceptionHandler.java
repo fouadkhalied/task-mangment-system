@@ -1,4 +1,4 @@
-package com.company.app.presentation.controller;
+package com.company.app.modules.taskCore.presentation.controller;
 
 import java.time.LocalDateTime;
 
@@ -14,8 +14,8 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import com.company.app.application.service.ResourceNotFoundException;
-import com.company.app.presentation.dto.ErrorResponse;
+import com.company.app.modules.taskCore.application.service.ResourceNotFoundException;
+import com.company.app.modules.taskCore.presentation.dto.ErrorResponse;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {

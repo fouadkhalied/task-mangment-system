@@ -9,15 +9,52 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
+       
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
+      
+      - name: Setup Azure Infrastructure
+        run: |
+          # Variables
+          RESOURCE_GROUP="task-mangment-system"
+          ACR_NAME="${{ secrets.TASKMANGMENT_ACR_NAME }}"
+          LOCATION="uae-north"
+          CONTAINER_APP_ENV="task-mangment-env"
+          
+          echo "🚀 Setting up Azure Container App infrastructure..."
+          
+          # Check if resource group exists
+          if ! az group show --name $RESOURCE_GROUP &> /dev/null; then
+              echo "📦 Creating resource group: $RESOURCE_GROUP"
+              az group create --name $RESOURCE_GROUP --location $LOCATION
+          else
+              echo "✅ Resource group $RESOURCE_GROUP already exists"
+          fi
+          
+          # Check if ACR exists
+          if ! az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
+              echo "🐳 Creating Azure Container Registry: $ACR_NAME"
+              az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --admin-enabled true
+          else
+              echo "✅ ACR $ACR_NAME already exists"
+          fi
+          
+          # Check if Container App Environment exists
+          if ! az containerapp env show --name $CONTAINER_APP_ENV --resource-group $RESOURCE_GROUP &> /dev/null; then
+              echo "🌍 Creating Container App Environment: $CONTAINER_APP_ENV"
+              az containerapp env create --name $CONTAINER_APP_ENV --resource-group $RESOURCE_GROUP --location $LOCATION
+          else
+              echo "✅ Container App Environment $CONTAINER_APP_ENV already exists"
+          fi
+          
+          echo "🎉 Infrastructure setup complete!"
+       
       - name: Build and push container image to ACR, then deploy to ACA
         uses: azure/container-apps-deploy-action@v2
         with:
@@ -29,5 +66,6 @@ jobs:
           imageToBuild: ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment:${{ github.sha }}
           containerAppName: task-mangment
           resourceGroup: task-mangment-system
+          containerAppEnvironment: task-mangment-env
           targetPort: 8080
           location: uae-north

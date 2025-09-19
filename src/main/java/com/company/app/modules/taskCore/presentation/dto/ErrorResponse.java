@@ -1,4 +1,4 @@
-package com.company.app.presentation.dto;
+package com.company.app.modules.taskCore.presentation.dto;
 
 import java.time.LocalDateTime;
 

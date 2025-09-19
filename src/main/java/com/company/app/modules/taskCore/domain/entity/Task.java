@@ -1,12 +1,12 @@
-package com.company.app.domain.entity;
+package com.company.app.modules.taskCore.domain.entity;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
 
-import com.company.app.domain.valueobject.Priority;
-import com.company.app.domain.valueobject.TaskStatus;
+import com.company.app.modules.taskCore.domain.valueobject.Priority;
+import com.company.app.modules.taskCore.domain.valueobject.TaskStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

@@ -59,6 +59,22 @@ jobs:
 
 
        
+      - name: Build and push Redis to ACR, then deploy
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          acrName: ${{ secrets.TASKMANGMENT_ACR_NAME }}
+          acrUsername: ${{ secrets.TASKMANGMENT_ACR_USERNAME }}
+          acrPassword: ${{ secrets.TASKMANGMENT_ACR_PASSWORD }}
+          appSourcePath: . # 👈 Use repository root as source path
+          dockerfilePath: ./docker/redis/Dockerfile
+          imageToBuild: ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-redis:${{ github.sha }}
+          containerAppName: task-mangment-redis
+          resourceGroup: task-mangment-system
+          containerAppEnvironment: ${{ env.CONTAINER_APP_ENV }}
+          targetPort: 6379
+          location: uaenorth
+          ingress: internal
+
       - name: Build and push Spring App to ACR
         uses: azure/container-apps-deploy-action@v2
         with:
@@ -74,19 +90,3 @@ jobs:
           targetPort: 8080
           location: uaenorth
           environmentVariables: 'SPRING_REDIS_HOST=task-mangment-redis SPRING_REDIS_PORT=6379'
-
-      - name: Build and push Redis to ACR, then deploy
-        uses: azure/container-apps-deploy-action@v2
-        with:
-          acrName: ${{ secrets.TASKMANGMENT_ACR_NAME }}
-          acrUsername: ${{ secrets.TASKMANGMENT_ACR_USERNAME }}
-          acrPassword: ${{ secrets.TASKMANGMENT_ACR_PASSWORD }}
-          appSourcePath: ./docker/redis # 👈 path with Redis Dockerfile
-          dockerfilePath: ./docker/redis/Dockerfile
-          imageToBuild: ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-redis:${{ github.sha }}
-          containerAppName: task-mangment-redis
-          resourceGroup: task-mangment-system
-          containerAppEnvironment: ${{ env.CONTAINER_APP_ENV }}
-          targetPort: 6379
-          location: uaenorth
-          ingress: internal

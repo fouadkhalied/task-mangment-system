@@ -24,7 +24,7 @@ jobs:
           # Variables
           RESOURCE_GROUP="task-mangment-system"
           ACR_NAME="${{ secrets.TASKMANGMENT_ACR_NAME }}"
-          LOCATION="uae-north"
+          LOCATION="uaenorth"
           CONTAINER_APP_ENV="task-mangment-env"
           
           echo "🚀 Setting up Azure Container App infrastructure..."
@@ -68,4 +68,4 @@ jobs:
           resourceGroup: task-mangment-system
           containerAppEnvironment: task-mangment-env
           targetPort: 8080
-          location: uae-north
+          location: uaenorth

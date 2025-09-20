@@ -100,9 +100,7 @@ jobs:
           az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./docker/kafka
       - name: Deploy Kafka
         run: |
-          # Get Zookeeper FQDN for internal communication
-          ZOOKEEPER_FQDN=$(az containerapp show --name task-mangment-zookeeper --resource-group task-mangment-system --query properties.configuration.ingress.fqdn -o tsv)
-          
+        
           if ! az containerapp show --name task-mangment-kafka --resource-group task-mangment-system &> /dev/null; then
             echo "Creating Kafka container app..."
             az containerapp create \
@@ -129,7 +127,7 @@ jobs:
               --name task-mangment-kafka \
               --resource-group task-mangment-system \
               --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-kafka:${{ github.sha }} \
-              --env-vars KAFKA_ZOOKEEPER_CONNECT="${ZOOKEEPER_FQDN}:2181" \
+              --env-vars KAFKA_ZOOKEEPER_CONNECT="task-mangment-zookeeper:2181" \
                           KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 \
                           KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://task-mangment-kafka:9092 \
                           KAFKA_BROKER_ID=1 \

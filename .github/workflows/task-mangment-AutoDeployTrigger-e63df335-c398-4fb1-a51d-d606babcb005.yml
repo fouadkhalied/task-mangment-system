@@ -88,7 +88,7 @@ jobs:
 
   deploy-kafka:
     runs-on: ubuntu-latest
-    needs: [build-and-deploy, deploy-zookeeper]
+    needs: [build-and-deploy]
     steps:
       - uses: actions/checkout@v3
       - uses: azure/login@v2

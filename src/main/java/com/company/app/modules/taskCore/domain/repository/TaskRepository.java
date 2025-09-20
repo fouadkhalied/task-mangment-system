@@ -14,6 +14,8 @@ import org.springframework.stereotype.Repository;
 import com.company.app.modules.taskCore.domain.entity.Task;
 import com.company.app.modules.taskCore.domain.valueobject.Priority;
 import com.company.app.modules.taskCore.domain.valueobject.TaskStatus;
+import com.company.app.infrastructure.redis.RedisService;
+
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task, UUID> {

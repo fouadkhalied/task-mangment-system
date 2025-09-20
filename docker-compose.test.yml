@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  redis-test:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  app-test:
+    build: .
+    depends_on:
+      - redis-test
+    environment:
+      - SPRING_REDIS_HOST=redis-test
+      - SPRING_REDIS_PORT=6379
+      - SPRING_PROFILES_ACTIVE=test
+    command: mvn test
+    volumes:
+      - .:/app
+      - maven-cache:/root/.m2
+    working_dir: /app
+
+volumes:
+  maven-cache:

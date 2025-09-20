@@ -1,4 +1,4 @@
-name: Build and push container images to ACR, then deploy Spring App and Redis to ACA
+name: Build and push container images to ACR, then deploy Spring App, Redis, and Kafka to ACA
 
 on:
   push:
@@ -24,6 +24,7 @@ jobs:
           # Variables
           RESOURCE_GROUP="task-mangment-system"
           ACR_NAME="${{ secrets.TASKMANGMENT_ACR_NAME }}"
+          KEY_VAULT_NAME="task-mangment-kv-$(date +%s | tail -c 6)"
           LOCATION="uaenorth"
           
           echo "🚀 Setting up Azure Container App infrastructure..."
@@ -44,6 +45,16 @@ jobs:
               echo "✅ ACR $ACR_NAME already exists"
           fi
           
+          # Create Key Vault if it doesn't exist
+          if ! az keyvault show --name $KEY_VAULT_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
+              echo "🔐 Creating Azure Key Vault: $KEY_VAULT_NAME"
+              az keyvault create --resource-group $RESOURCE_GROUP --name $KEY_VAULT_NAME --location $LOCATION
+              echo "KEY_VAULT_NAME=$KEY_VAULT_NAME" >> $GITHUB_ENV
+          else
+              echo "✅ Key Vault already exists"
+              echo "KEY_VAULT_NAME=$KEY_VAULT_NAME" >> $GITHUB_ENV
+          fi
+          
           # Find existing Container App Environment and export it
           EXISTING_ENV=$(az containerapp env list --resource-group $RESOURCE_GROUP --query "[0].name" -o tsv)
           if [ -n "$EXISTING_ENV" ]; then
@@ -57,15 +68,55 @@ jobs:
           
           echo "🎉 Infrastructure setup complete!"
 
-
-       
-      - name: Build and push Redis to ACR, then deploy
+      - name: Deploy Zookeeper and Store Config in Key Vault
         uses: azure/container-apps-deploy-action@v2
         with:
           acrName: ${{ secrets.TASKMANGMENT_ACR_NAME }}
           acrUsername: ${{ secrets.TASKMANGMENT_ACR_USERNAME }}
           acrPassword: ${{ secrets.TASKMANGMENT_ACR_PASSWORD }}
-          appSourcePath: . # 👈 Use repository root as source path
+          appSourcePath: .
+          dockerfilePath: ./docker/zookeeper/Dockerfile
+          imageToBuild: ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-zookeeper:${{ github.sha }}
+          containerAppName: task-mangment-zookeeper
+          resourceGroup: task-mangment-system
+          containerAppEnvironment: ${{ env.CONTAINER_APP_ENV }}
+          targetPort: 2181
+          location: uaenorth
+          ingress: internal
+
+      - name: Store Zookeeper Config in Key Vault
+        run: |
+          az keyvault secret set --vault-name ${{ env.KEY_VAULT_NAME }} --name "zookeeper-host" --value "task-mangment-zookeeper"
+          az keyvault secret set --vault-name ${{ env.KEY_VAULT_NAME }} --name "zookeeper-port" --value "2181"
+
+      - name: Deploy Kafka and Store Config in Key Vault
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          acrName: ${{ secrets.TASKMANGMENT_ACR_NAME }}
+          acrUsername: ${{ secrets.TASKMANGMENT_ACR_USERNAME }}
+          acrPassword: ${{ secrets.TASKMANGMENT_ACR_PASSWORD }}
+          appSourcePath: .
+          dockerfilePath: ./docker/kafka/Dockerfile
+          imageToBuild: ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-kafka:${{ github.sha }}
+          containerAppName: task-mangment-kafka
+          resourceGroup: task-mangment-system
+          containerAppEnvironment: ${{ env.CONTAINER_APP_ENV }}
+          targetPort: 9092
+          location: uaenorth
+          ingress: internal
+          environmentVariables: 'KAFKA_ZOOKEEPER_CONNECT=task-mangment-zookeeper:2181 KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://task-mangment-kafka:9092 KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 KAFKA_BROKER_ID=1 KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1'
+
+      - name: Store Kafka Config in Key Vault
+        run: |
+          az keyvault secret set --vault-name ${{ env.KEY_VAULT_NAME }} --name "kafka-bootstrap-servers" --value "task-mangment-kafka:9092"
+
+      - name: Deploy Redis and Store Config in Key Vault
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          acrName: ${{ secrets.TASKMANGMENT_ACR_NAME }}
+          acrUsername: ${{ secrets.TASKMANGMENT_ACR_USERNAME }}
+          acrPassword: ${{ secrets.TASKMANGMENT_ACR_PASSWORD }}
+          appSourcePath: .
           dockerfilePath: ./docker/redis/Dockerfile
           imageToBuild: ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-redis:${{ github.sha }}
           containerAppName: task-mangment-redis
@@ -75,13 +126,30 @@ jobs:
           location: uaenorth
           ingress: internal
 
-      - name: Build and push Spring App to ACR
+      - name: Store Redis Config in Key Vault
+        run: |
+          az keyvault secret set --vault-name ${{ env.KEY_VAULT_NAME }} --name "redis-host" --value "task-mangment-redis"
+          az keyvault secret set --vault-name ${{ env.KEY_VAULT_NAME }} --name "redis-port" --value "6379"
+
+      - name: Retrieve Secrets and Deploy Spring App
+        run: |
+          # Retrieve secrets from Key Vault
+          REDIS_HOST=$(az keyvault secret show --vault-name ${{ env.KEY_VAULT_NAME }} --name "redis-host" --query "value" -o tsv)
+          REDIS_PORT=$(az keyvault secret show --vault-name ${{ env.KEY_VAULT_NAME }} --name "redis-port" --query "value" -o tsv)
+          KAFKA_SERVERS=$(az keyvault secret show --vault-name ${{ env.KEY_VAULT_NAME }} --name "kafka-bootstrap-servers" --query "value" -o tsv)
+          
+          # Export for next step
+          echo "REDIS_HOST=$REDIS_HOST" >> $GITHUB_ENV
+          echo "REDIS_PORT=$REDIS_PORT" >> $GITHUB_ENV
+          echo "KAFKA_SERVERS=$KAFKA_SERVERS" >> $GITHUB_ENV
+
+      - name: Deploy Spring App with Retrieved Configs
         uses: azure/container-apps-deploy-action@v2
         with:
           acrName: ${{ secrets.TASKMANGMENT_ACR_NAME }}
           acrUsername: ${{ secrets.TASKMANGMENT_ACR_USERNAME }}
           acrPassword: ${{ secrets.TASKMANGMENT_ACR_PASSWORD }}
-          appSourcePath: . # 👈 path with your Spring app Dockerfile
+          appSourcePath: .
           dockerfilePath: ./Dockerfile
           imageToBuild: ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-app:${{ github.sha }}
           containerAppName: task-mangment-app
@@ -89,4 +157,4 @@ jobs:
           containerAppEnvironment: ${{ env.CONTAINER_APP_ENV }}
           targetPort: 8080
           location: uaenorth
-          environmentVariables: 'SPRING_REDIS_HOST=task-mangment-redis SPRING_REDIS_PORT=6379'
+          environmentVariables: 'SPRING_REDIS_HOST=${{ env.REDIS_HOST }} SPRING_REDIS_PORT=${{ env.REDIS_PORT }} KAFKA_BOOTSTRAP_SERVERS=${{ env.KAFKA_SERVERS }}'

@@ -9,7 +9,8 @@ A modern task management microservice built with Spring Boot, PostgreSQL, and Re
 ### Tech Stack
 - **Backend**: Spring Boot 3.5.5 with Java 21
 - **Database**: PostgreSQL (UUID primary keys)
-- **Cache**: Redis
+- **Cache**: Redis with advanced caching strategies
+- **Messaging**: Apache Kafka for event-driven architecture
 - **Containerization**: Docker & Docker Compose
 - **Deployment**: Azure Container Apps
 - **Build Tool**: Maven
@@ -26,7 +27,13 @@ A modern task management microservice built with Spring Boot, PostgreSQL, and Re
 - ✅ Task assignment and status tracking
 - ✅ Priority management
 - ✅ Overdue task detection
-- ✅ Redis caching for performance
+- ✅ Advanced Redis caching with multiple strategies
+- ✅ Cache performance monitoring and metrics
+- ✅ Cache management APIs
+- ✅ Apache Kafka event-driven messaging
+- ✅ Real-time task event publishing
+- ✅ Notification system with Kafka
+- ✅ Analytics and monitoring integration
 - ✅ Health checks and monitoring
 - ✅ Docker containerization
 - ✅ Cloud deployment ready
@@ -144,6 +151,26 @@ app/
 - `GET /api/tasks/status/{status}` - Get tasks by status
 - `GET /api/tasks/overdue` - Get overdue tasks
 
+### Cache Management
+- `GET /api/cache/stats` - Cache statistics
+- `DELETE /api/cache/clear` - Clear all cache
+- `DELETE /api/cache/task/{id}` - Evict specific task
+- `DELETE /api/cache/board/{id}` - Evict board cache
+- `DELETE /api/cache/user/{id}` - Evict user cache
+
+### Performance Monitoring
+- `GET /api/metrics/cache` - Cache performance metrics
+- `GET /api/metrics/cache/average-times` - Average operation times
+- `POST /api/metrics/cache/reset` - Reset metrics
+
+### Kafka Management
+- `GET /api/kafka/health` - Kafka health status
+- `GET /api/kafka/metrics` - Kafka performance metrics
+- `GET /api/kafka/metrics/publish-times` - Average publish times
+- `GET /api/kafka/metrics/consumption-times` - Average consumption times
+- `POST /api/kafka/metrics/reset` - Reset Kafka metrics
+- `GET /api/kafka/info` - Kafka service information
+
 ### Health & Monitoring
 - `GET /actuator/health` - Application health
 - `GET /actuator/info` - Application info
@@ -154,9 +181,11 @@ app/
 ### Application Stack
 ```yaml
 services:
-  app:           # Spring Boot application (port 8081)
+  app:           # Spring Boot application (port 8080)
+  postgresql:    # PostgreSQL database (port 5432)
   redis:         # Redis cache (port 6379)
-  mongo-express: # MongoDB web UI (port 8081)
+  kafka:         # Apache Kafka (port 9092)
+  zookeeper:     # Zookeeper for Kafka (port 2181)
 ```
 
 ### Container Features
@@ -194,6 +223,26 @@ services:
 # Unit tests
 mvn test
 
+# Cache tests only
+mvn test -Dtest=CacheServiceUnitTest
+
+# Kafka tests only
+mvn test -Dtest=KafkaServiceUnitTest
+
+# All tests with scripts
+# Windows
+run-tests.bat
+
+# Linux/Mac
+chmod +x run-tests.sh && ./run-tests.sh
+
+# Kafka tests with Docker
+# Windows
+run-kafka-tests.bat
+
+# Linux/Mac
+chmod +x run-kafka-tests.sh && ./run-kafka-tests.sh
+
 # Integration tests with embedded MongoDB
 mvn verify
 
@@ -222,6 +271,34 @@ mvn test -Dspring.profiles.active=test
 
 ## 📈 Performance Optimizations
 
+### Advanced Caching System
+
+The application implements a sophisticated multi-level caching strategy using Redis:
+
+#### Cache Types & TTLs
+- **Individual Tasks**: 1 hour TTL for frequently accessed tasks
+- **Task Lists**: 30 minutes TTL for board/user task collections
+- **Task Counts**: 15 minutes TTL for dashboard statistics
+- **User Tasks**: 45 minutes TTL for user-specific task lists
+
+#### Cache Management Features
+- **Smart Eviction**: Automatic cache invalidation on data changes
+- **Performance Metrics**: Detailed monitoring of cache hit/miss ratios
+- **Administrative APIs**: Full cache management through REST endpoints
+- **Statistics Tracking**: Real-time cache performance analytics
+
+#### Usage Examples
+```bash
+# Get cache statistics
+curl http://localhost:8081/api/cache/stats
+
+# Clear specific board cache
+curl -X DELETE http://localhost:8081/api/cache/board/board-123
+
+# Get performance metrics
+curl http://localhost:8081/api/metrics/cache
+```
+
 ### MongoDB Indexes
 ```javascript
 // Essential indexes for performance
@@ -231,9 +308,43 @@ db.tasks.createIndex({ "due_date": 1, "status": 1 })
 ```
 
 ### Redis Caching
-- **Task queries** cached for fast retrieval
-- **Session management** for user state
-- **Rate limiting** for API protection
+- **Multi-level caching strategy** with different TTLs
+- **Task individual caching** (1 hour TTL)
+- **Task list caching** (30 minutes TTL)
+- **Task count caching** (15 minutes TTL)
+- **User task caching** (45 minutes TTL)
+- **Intelligent cache eviction** on data changes
+- **Cache performance monitoring** with detailed metrics
+- **Cache management APIs** for administration
+
+### Event-Driven Messaging System
+
+The application implements a comprehensive event-driven architecture using Apache Kafka:
+
+#### Event Types & Topics
+- **Task Events**: Core task lifecycle events (create, update, delete, status change)
+- **Notifications**: User notifications and alerts
+- **Analytics**: Data for business intelligence and reporting
+- **Dead Letter Queue**: Failed message handling
+
+#### Kafka Features
+- **Reliable Messaging**: ACKS=all with idempotence for guaranteed delivery
+- **Event Processing**: Real-time event consumption and processing
+- **Performance Monitoring**: Detailed metrics for publish/consume operations
+- **Dead Letter Queue**: Automatic handling of failed messages
+- **Batch Operations**: Efficient batch message processing
+
+#### Usage Examples
+```bash
+# Get Kafka metrics
+curl http://localhost:8080/api/kafka/metrics
+
+# Check Kafka health
+curl http://localhost:8080/api/kafka/health
+
+# Get service information
+curl http://localhost:8080/api/kafka/info
+```
 
 ### Application Optimizations
 - **Lazy loading** for large collections
@@ -289,6 +400,21 @@ docker logs <redis-container-id>
 
 # Restart Redis
 docker-compose restart redis
+
+# Test Redis connection
+docker exec -it <redis-container-id> redis-cli ping
+```
+
+**Cache Performance Issues**
+```bash
+# Check cache statistics
+curl http://localhost:8081/api/cache/stats
+
+# Check cache metrics
+curl http://localhost:8081/api/metrics/cache
+
+# Clear cache if needed
+curl -X DELETE http://localhost:8081/api/cache/clear
 ```
 
 **Application Won't Start**
@@ -311,9 +437,12 @@ java --version
 ## 📖 Further Reading
 
 - [Spring Boot Documentation](https://spring.io/projects/spring-boot)
-- [MongoDB Documentation](https://docs.mongodb.com/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [Redis Documentation](https://redis.io/documentation)
 - [Azure Container Apps Documentation](https://docs.microsoft.com/en-us/azure/container-apps/)
 - [Docker Documentation](https://docs.docker.com/)
+- [Caching Implementation Guide](./docs/04-caching-implementation.md) - Detailed caching documentation
+- [Kafka Implementation Guide](./docs/05-kafka-implementation.md) - Event-driven messaging documentation
 - [DDIA Book](https://dataintensive.net/) - Database design principles
 
 **Built with ❤️ using modern cloud-native technologies**

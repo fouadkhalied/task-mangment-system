@@ -26,98 +26,128 @@ jobs:
           ACR_NAME="${{ secrets.TASKMANGMENT_ACR_NAME }}"
           LOCATION="uaenorth"
           
-          echo "🚀 Setting up Azure Container App infrastructure..."
+          echo "Setting up Azure Container App infrastructure..."
           
           # Check if resource group exists
           if ! az group show --name $RESOURCE_GROUP &> /dev/null; then
-              echo "📦 Creating resource group: $RESOURCE_GROUP"
+              echo "Creating resource group: $RESOURCE_GROUP"
               az group create --name $RESOURCE_GROUP --location $LOCATION
           else
-              echo "✅ Resource group $RESOURCE_GROUP already exists"
+              echo "Resource group $RESOURCE_GROUP already exists"
           fi
           
           # Check if ACR exists
           if ! az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
-              echo "🐳 Creating Azure Container Registry: $ACR_NAME"
+              echo "Creating Azure Container Registry: $ACR_NAME"
               az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --admin-enabled true
           else
-              echo "✅ ACR $ACR_NAME already exists"
+              echo "ACR $ACR_NAME already exists"
           fi
           
           # Find existing Container App Environment and export it
           EXISTING_ENV=$(az containerapp env list --resource-group $RESOURCE_GROUP --query "[0].name" -o tsv)
           if [ -n "$EXISTING_ENV" ]; then
-              echo "✅ Using existing Container App Environment: $EXISTING_ENV"
+              echo "Using existing Container App Environment: $EXISTING_ENV"
               echo "CONTAINER_APP_ENV=$EXISTING_ENV" >> $GITHUB_ENV
           else
-              echo "❌ No Container App Environment found in resource group $RESOURCE_GROUP"
+              echo "No Container App Environment found in resource group $RESOURCE_GROUP"
               echo "Please create an environment first"
               exit 1
           fi
           
-          echo "🎉 Infrastructure setup complete!"
+          echo "Infrastructure setup complete!"
 
-      - name: Build and push Zookeeper to ACR, then deploy
-        uses: azure/container-apps-deploy-action@v2
-        with:
-          acrName: ${{ secrets.TASKMANGMENT_ACR_NAME }}
-          acrUsername: ${{ secrets.TASKMANGMENT_ACR_USERNAME }}
-          acrPassword: ${{ secrets.TASKMANGMENT_ACR_PASSWORD }}
-          appSourcePath: .
-          dockerfilePath: ./docker/zookeeper/Dockerfile
-          imageToBuild: ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-zookeeper:${{ github.sha }}
-          containerAppName: task-mangment-zookeeper
-          resourceGroup: task-mangment-system
-          containerAppEnvironment: ${{ env.CONTAINER_APP_ENV }}
-          targetPort: 2181
-          location: uaenorth
-          ingress: internal
+      - name: Deploy Zookeeper with minimum replicas
+        run: |
+          az containerapp create \
+            --name task-mangment-zookeeper \
+            --resource-group task-mangment-system \
+            --environment ${{ env.CONTAINER_APP_ENV }} \
+            --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-zookeeper:${{ github.sha }} \
+            --target-port 2181 \
+            --ingress internal \
+            --min-replicas 1 \
+            --max-replicas 3 \
+            --registry-server ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io \
+            --registry-username ${{ secrets.TASKMANGMENT_ACR_USERNAME }} \
+            --registry-password ${{ secrets.TASKMANGMENT_ACR_PASSWORD }} \
+            --cpu 0.5 --memory 1Gi || \
+          az containerapp update \
+            --name task-mangment-zookeeper \
+            --resource-group task-mangment-system \
+            --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-zookeeper:${{ github.sha }} \
+            --min-replicas 1 \
+            --max-replicas 3
 
-      - name: Build and push Kafka to ACR, then deploy
-        uses: azure/container-apps-deploy-action@v2
-        with:
-          acrName: ${{ secrets.TASKMANGMENT_ACR_NAME }}
-          acrUsername: ${{ secrets.TASKMANGMENT_ACR_USERNAME }}
-          acrPassword: ${{ secrets.TASKMANGMENT_ACR_PASSWORD }}
-          appSourcePath: .
-          dockerfilePath: ./docker/kafka/Dockerfile
-          imageToBuild: ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-kafka:${{ github.sha }}
-          containerAppName: task-mangment-kafka
-          resourceGroup: task-mangment-system
-          containerAppEnvironment: ${{ env.CONTAINER_APP_ENV }}
-          targetPort: 9092
-          location: uaenorth
-          ingress: internal
-          environmentVariables: 'KAFKA_ZOOKEEPER_CONNECT=task-mangment-zookeeper:2181 KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://task-mangment-kafka:9092 KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 KAFKA_BROKER_ID=1 KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1'
+      - name: Deploy Kafka with minimum replicas
+        run: |
+          az containerapp create \
+            --name task-mangment-kafka \
+            --resource-group task-mangment-system \
+            --environment ${{ env.CONTAINER_APP_ENV }} \
+            --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-kafka:${{ github.sha }} \
+            --target-port 9092 \
+            --ingress internal \
+            --min-replicas 1 \
+            --max-replicas 3 \
+            --registry-server ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io \
+            --registry-username ${{ secrets.TASKMANGMENT_ACR_USERNAME }} \
+            --registry-password ${{ secrets.TASKMANGMENT_ACR_PASSWORD }} \
+            --env-vars KAFKA_ZOOKEEPER_CONNECT=task-mangment-zookeeper:2181 KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://task-mangment-kafka:9092 KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 KAFKA_BROKER_ID=1 KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
+            --cpu 0.5 --memory 1Gi || \
+          az containerapp update \
+            --name task-mangment-kafka \
+            --resource-group task-mangment-system \
+            --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-kafka:${{ github.sha }} \
+            --min-replicas 1 \
+            --max-replicas 3
 
-      - name: Build and push Redis to ACR, then deploy
-        uses: azure/container-apps-deploy-action@v2
-        with:
-          acrName: ${{ secrets.TASKMANGMENT_ACR_NAME }}
-          acrUsername: ${{ secrets.TASKMANGMENT_ACR_USERNAME }}
-          acrPassword: ${{ secrets.TASKMANGMENT_ACR_PASSWORD }}
-          appSourcePath: .
-          dockerfilePath: ./docker/redis/Dockerfile
-          imageToBuild: ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-redis:${{ github.sha }}
-          containerAppName: task-mangment-redis
-          resourceGroup: task-mangment-system
-          containerAppEnvironment: ${{ env.CONTAINER_APP_ENV }}
-          targetPort: 6379
-          location: uaenorth
-          ingress: internal
+      - name: Deploy Redis with minimum replicas
+        run: |
+          az containerapp create \
+            --name task-mangment-redis \
+            --resource-group task-mangment-system \
+            --environment ${{ env.CONTAINER_APP_ENV }} \
+            --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-redis:${{ github.sha }} \
+            --target-port 6379 \
+            --ingress internal \
+            --min-replicas 1 \
+            --max-replicas 3 \
+            --registry-server ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io \
+            --registry-username ${{ secrets.TASKMANGMENT_ACR_USERNAME }} \
+            --registry-password ${{ secrets.TASKMANGMENT_ACR_PASSWORD }} \
+            --cpu 0.5 --memory 1Gi || \
+          az containerapp update \
+            --name task-mangment-redis \
+            --resource-group task-mangment-system \
+            --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-redis:${{ github.sha }} \
+            --min-replicas 1 \
+            --max-replicas 3
 
-      - name: Build and push Spring App to ACR
-        uses: azure/container-apps-deploy-action@v2
-        with:
-          acrName: ${{ secrets.TASKMANGMENT_ACR_NAME }}
-          acrUsername: ${{ secrets.TASKMANGMENT_ACR_USERNAME }}
-          acrPassword: ${{ secrets.TASKMANGMENT_ACR_PASSWORD }}
-          appSourcePath: .
-          dockerfilePath: ./Dockerfile
-          imageToBuild: ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-app:${{ github.sha }}
-          containerAppName: task-mangment-app
-          resourceGroup: task-mangment-system
-          containerAppEnvironment: ${{ env.CONTAINER_APP_ENV }}
-          targetPort: 8080
-          location: uaenorth
-          environmentVariables: 'SPRING_REDIS_HOST=task-mangment-redis SPRING_REDIS_PORT=6379 KAFKA_BOOTSTRAP_SERVERS=task-mangment-kafka:9092'
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for services to start..."
+          sleep 60
+
+      - name: Deploy Spring App with database config
+        run: |
+          az containerapp create \
+            --name task-mangment-app \
+            --resource-group task-mangment-system \
+            --environment ${{ env.CONTAINER_APP_ENV }} \
+            --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-app:${{ github.sha }} \
+            --target-port 8080 \
+            --ingress external \
+            --min-replicas 1 \
+            --max-replicas 5 \
+            --registry-server ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io \
+            --registry-username ${{ secrets.TASKMANGMENT_ACR_USERNAME }} \
+            --registry-password ${{ secrets.TASKMANGMENT_ACR_PASSWORD }} \
+            --env-vars SPRING_REDIS_HOST=task-mangment-redis SPRING_REDIS_PORT=6379 KAFKA_BOOTSTRAP_SERVERS=task-mangment-kafka:9092 SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }} SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }} SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }} \
+            --cpu 1.0 --memory 2Gi || \
+          az containerapp update \
+            --name task-mangment-app \
+            --resource-group task-mangment-system \
+            --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-app:${{ github.sha }} \
+            --min-replicas 1 \
+            --max-replicas 5

@@ -55,7 +55,7 @@ jobs:
       - name: Build and push Zookeeper image
         run: |
           IMAGE="${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-zookeeper:${{ github.sha }}"
-          az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./zookeeper
+          az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./docker/zookeeper
       - name: Deploy Zookeeper
         run: |
           az containerapp update \
@@ -77,7 +77,7 @@ jobs:
       - name: Build and push Kafka image
         run: |
           IMAGE="${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-kafka:${{ github.sha }}"
-          az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./kafka
+          az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./docker/kafka
       - name: Deploy Kafka
         run: |
           az containerapp update \
@@ -104,7 +104,7 @@ jobs:
       - name: Build and push Redis image
         run: |
           IMAGE="${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-redis:${{ github.sha }}"
-          az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./redis
+          az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./docker/redis
       - name: Deploy Redis
         run: |
           az containerapp update \

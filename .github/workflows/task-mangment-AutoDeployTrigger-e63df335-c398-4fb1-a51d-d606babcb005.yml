@@ -40,15 +40,6 @@ jobs:
             az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --admin-enabled true
           fi
 
-          # Create or get container apps environment
-          if ! az containerapp env show --name $ENV_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
-            echo "Creating Container Apps Environment..."
-            az containerapp env create \
-              --name $ENV_NAME \
-              --resource-group $RESOURCE_GROUP \
-              --location $LOCATION
-          fi
-
           echo "container-app-env=$ENV_NAME" >> $GITHUB_OUTPUT
           echo "CONTAINER_APP_ENV=$ENV_NAME" >> $GITHUB_ENV
 

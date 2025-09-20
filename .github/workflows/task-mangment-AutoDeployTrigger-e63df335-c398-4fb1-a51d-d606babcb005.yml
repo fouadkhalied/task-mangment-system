@@ -1,4 +1,4 @@
-name: Build and push container images to ACR, then deploy Spring App, Redis, and Kafka to ACA
+name: Build and push container images to ACR, then deploy services to ACA
 
 on:
   push:
@@ -9,69 +9,55 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-       
+
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
+
       - name: Setup Azure Infrastructure
         run: |
-          # Variables
           RESOURCE_GROUP="task-mangment-system"
           ACR_NAME="${{ secrets.TASKMANGMENT_ACR_NAME }}"
           LOCATION="uaenorth"
-          
-          echo "Setting up Azure Container App infrastructure..."
-          
-          # Check if resource group exists
+
           if ! az group show --name $RESOURCE_GROUP &> /dev/null; then
-              echo "Creating resource group: $RESOURCE_GROUP"
-              az group create --name $RESOURCE_GROUP --location $LOCATION
-          else
-              echo "Resource group $RESOURCE_GROUP already exists"
+            az group create --name $RESOURCE_GROUP --location $LOCATION
           fi
-          
-          # Check if ACR exists
+
           if ! az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
-              echo "Creating Azure Container Registry: $ACR_NAME"
-              az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --admin-enabled true
-          else
-              echo "ACR $ACR_NAME already exists"
+            az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --admin-enabled true
           fi
-          
-          # Find existing Container App Environment and export it
+
           EXISTING_ENV=$(az containerapp env list --resource-group $RESOURCE_GROUP --query "[0].name" -o tsv)
           if [ -n "$EXISTING_ENV" ]; then
-              echo "Using existing Container App Environment: $EXISTING_ENV"
-              echo "CONTAINER_APP_ENV=$EXISTING_ENV" >> $GITHUB_ENV
+            echo "CONTAINER_APP_ENV=$EXISTING_ENV" >> $GITHUB_ENV
           else
-              echo "No Container App Environment found in resource group $RESOURCE_GROUP"
-              echo "Please create an environment first"
-              exit 1
+            echo "No Container App Environment found!"
+            exit 1
           fi
-          
-          echo "Infrastructure setup complete!"
 
-      - name: Deploy Zookeeper with minimum replicas
+  # -------------------
+  # Build per-service
+  # -------------------
+  build-zookeeper:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'zookeeper')
+    steps:
+      - uses: actions/checkout@v3
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Build and push Zookeeper image
         run: |
-          az containerapp create \
-            --name task-mangment-zookeeper \
-            --resource-group task-mangment-system \
-            --environment ${{ env.CONTAINER_APP_ENV }} \
-            --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-zookeeper:${{ github.sha }} \
-            --target-port 2181 \
-            --ingress internal \
-            --min-replicas 1 \
-            --max-replicas 3 \
-            --registry-server ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io \
-            --registry-username ${{ secrets.TASKMANGMENT_ACR_USERNAME }} \
-            --registry-password ${{ secrets.TASKMANGMENT_ACR_PASSWORD }} \
-            --cpu 0.5 --memory 1Gi || \
+          IMAGE="${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-zookeeper:${{ github.sha }}"
+          az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./zookeeper
+      - name: Deploy Zookeeper
+        run: |
           az containerapp update \
             --name task-mangment-zookeeper \
             --resource-group task-mangment-system \
@@ -79,44 +65,48 @@ jobs:
             --min-replicas 1 \
             --max-replicas 3
 
-      - name: Deploy Kafka with minimum replicas
+  build-kafka:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'kafka')
+    steps:
+      - uses: actions/checkout@v3
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Build and push Kafka image
         run: |
-          az containerapp create \
-            --name task-mangment-kafka \
-            --resource-group task-mangment-system \
-            --environment ${{ env.CONTAINER_APP_ENV }} \
-            --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-kafka:${{ github.sha }} \
-            --target-port 9092 \
-            --ingress internal \
-            --min-replicas 1 \
-            --max-replicas 3 \
-            --registry-server ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io \
-            --registry-username ${{ secrets.TASKMANGMENT_ACR_USERNAME }} \
-            --registry-password ${{ secrets.TASKMANGMENT_ACR_PASSWORD }} \
-            --env-vars KAFKA_ZOOKEEPER_CONNECT=task-mangment-zookeeper:2181 KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://task-mangment-kafka:9092 KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 KAFKA_BROKER_ID=1 KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
-            --cpu 0.5 --memory 1Gi || \
+          IMAGE="${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-kafka:${{ github.sha }}"
+          az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./kafka
+      - name: Deploy Kafka
+        run: |
           az containerapp update \
             --name task-mangment-kafka \
             --resource-group task-mangment-system \
             --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-kafka:${{ github.sha }} \
+            --env-vars KAFKA_ZOOKEEPER_CONNECT=task-mangment-zookeeper:2181 \
+                        KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://task-mangment-kafka:9092 \
+                        KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 \
+                        KAFKA_BROKER_ID=1 \
+                        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
             --min-replicas 1 \
             --max-replicas 3
 
-      - name: Deploy Redis with minimum replicas
+  build-redis:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'redis')
+    steps:
+      - uses: actions/checkout@v3
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Build and push Redis image
         run: |
-          az containerapp create \
-            --name task-mangment-redis \
-            --resource-group task-mangment-system \
-            --environment ${{ env.CONTAINER_APP_ENV }} \
-            --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-redis:${{ github.sha }} \
-            --target-port 6379 \
-            --ingress internal \
-            --min-replicas 1 \
-            --max-replicas 3 \
-            --registry-server ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io \
-            --registry-username ${{ secrets.TASKMANGMENT_ACR_USERNAME }} \
-            --registry-password ${{ secrets.TASKMANGMENT_ACR_PASSWORD }} \
-            --cpu 0.5 --memory 1Gi || \
+          IMAGE="${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-redis:${{ github.sha }}"
+          az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./redis
+      - name: Deploy Redis
+        run: |
           az containerapp update \
             --name task-mangment-redis \
             --resource-group task-mangment-system \
@@ -124,30 +114,30 @@ jobs:
             --min-replicas 1 \
             --max-replicas 3
 
-      - name: Wait for services to be ready
+  build-app:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'app')
+    steps:
+      - uses: actions/checkout@v3
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Build and push App image
         run: |
-          echo "Waiting for services to start..."
-          sleep 60
-
-      - name: Deploy Spring App with database config
+          IMAGE="${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-app:${{ github.sha }}"
+          az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./app
+      - name: Deploy App
         run: |
-          az containerapp create \
-            --name task-mangment-app \
-            --resource-group task-mangment-system \
-            --environment ${{ env.CONTAINER_APP_ENV }} \
-            --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-app:${{ github.sha }} \
-            --target-port 8080 \
-            --ingress external \
-            --min-replicas 1 \
-            --max-replicas 5 \
-            --registry-server ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io \
-            --registry-username ${{ secrets.TASKMANGMENT_ACR_USERNAME }} \
-            --registry-password ${{ secrets.TASKMANGMENT_ACR_PASSWORD }} \
-            --env-vars SPRING_REDIS_HOST=task-mangment-redis SPRING_REDIS_PORT=6379 KAFKA_BOOTSTRAP_SERVERS=task-mangment-kafka:9092 SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }} SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }} SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }} \
-            --cpu 1.0 --memory 2Gi || \
           az containerapp update \
             --name task-mangment-app \
             --resource-group task-mangment-system \
             --image ${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-app:${{ github.sha }} \
+            --env-vars SPRING_REDIS_HOST=task-mangment-redis \
+                        SPRING_REDIS_PORT=6379 \
+                        KAFKA_BOOTSTRAP_SERVERS=task-mangment-kafka:9092 \
+                        SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }} \
+                        SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }} \
+                        SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }} \
             --min-replicas 1 \
             --max-replicas 5

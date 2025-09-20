@@ -26,7 +26,7 @@ jobs:
           RESOURCE_GROUP="task-mangment-system"
           ACR_NAME="${{ secrets.TASKMANGMENT_ACR_NAME }}"
           LOCATION="uaenorth"
-          ENV_NAME="task-mangment-env"
+          ENV_NAME="managedEnvironment-taskmangmentsys-a3fc"
 
           # Create resource group
           if ! az group show --name $RESOURCE_GROUP &> /dev/null; then
@@ -99,7 +99,6 @@ jobs:
         run: |
           IMAGE="${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-kafka:${{ github.sha }}"
           az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./docker/kafka
-      
       - name: Deploy Kafka
         run: |
           # Get Zookeeper FQDN for internal communication

@@ -188,7 +188,7 @@ jobs:
       - name: Build and push App image
         run: |
           IMAGE="${{ secrets.TASKMANGMENT_ACR_NAME }}.azurecr.io/task-mangment-app:${{ github.sha }}"
-          az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./app
+          az acr build --registry ${{ secrets.TASKMANGMENT_ACR_NAME }} --image $IMAGE ./docker/app
       
       - name: Deploy App
         run: |
